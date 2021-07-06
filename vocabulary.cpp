@@ -3,13 +3,17 @@
 #include "QLineEdit"
 #include "QFile"
 #include "QFileDialog"
+#include "stdio.h"
+#include "stdlib.h"
+#include "time.h"
 
-QString beirtszo="";
+QString beirtszo="def";
 QString kiirtszo="def";
 int score=0;
 int questnum=0;
 QString lines[20];
-int index=0;
+int indexx=0;
+bool synonym=0;
 
 vocabulary::vocabulary(QWidget *parent) //draws the window and the widgets
     : QMainWindow(parent)
@@ -31,21 +35,26 @@ vocabulary::~vocabulary()
 
 void vocabulary::on_okbutton_clicked()
 {
-    beirtszo=ui->inputbar->text(); //stores the inserted word
+    if (questnum!=0) beirtszo=ui->inputbar->text(); //stores the inserted word
 
-    if (beirtszo==lines[index].mid(lines[index].indexOf(";")+1, lines[index].length()) && questnum!=0)
+ //-----------------------------------checking for synonyms--------------------------------------------
+
+    QString ewords=lines[indexx].mid(lines[indexx].indexOf(";")+1, lines[indexx].length());
+    synonym=ewords.contains(beirtszo + ":"); //':' so that it wont accept word fragments
+
+    if (synonym && questnum!=0 && beirtszo!="")
     {
         score++;
         questnum++;
     }
 
-    if (questnum>0 && beirtszo!=lines[index].mid(lines[index].indexOf(";")+1, lines[index].length()))
+    if ((!synonym && questnum>0) || beirtszo=="")
     {
         score--;
         questnum++;
     }
 
-   //showing widgets on first click
+  //--------------------------showing widgets on first click------------------------------------------
     if (kiirtszo=="def")
     {
 
@@ -56,22 +65,23 @@ void vocabulary::on_okbutton_clicked()
         questnum++;
     }
 
+  //-------------------------------updates the widgets------------------------------------------------
 
-  //updates the widgets
     ui->scorelabel->setText("Score: " + QString::number(score));
     ui->questionlabel->setText("Question " + QString::number(questnum));
     ui->inputbar->setText("");
 
 
-  //generates and outputs a new world on every click
+  //-------------------generates and outputs a new world on every click-------------------------------
     if (questnum<21)
     {
-        index=rand()%20;
-        kiirtszo=lines[index].mid(0,lines[index].indexOf(";"));
+        srand((unsigned)time(0));
+        indexx=rand()%20;
+        kiirtszo=lines[indexx].mid(0,lines[indexx].indexOf(";"));
         ui->mainmessage->setText(kiirtszo);
     }
 
-  //Handles scores after a round of 20 words
+  //---------------------------Handles scores after a round of 20 words-------------------------------
     if (questnum==21)
     {
         vocabulary::scorehandler();
@@ -79,14 +89,14 @@ void vocabulary::on_okbutton_clicked()
 
 }
 
-
-void vocabulary::on_inputbar_returnPressed() //does the same as the on_okbutton_clicked()
+  //-------------------------------does the same as the on_okbutton_clicked()-------------------------
+void vocabulary::on_inputbar_returnPressed()
 {
     vocabulary::on_okbutton_clicked();
 }
 
 
-void vocabulary::readfile() //opens the txt and stores the words in lines
+void vocabulary::readfile() //------------------------------opens the txt and stores the words in lines
 {
     QFile file("source.txt");
     while (!file.open(QIODevice::ReadOnly | QIODevice::Text))
@@ -104,22 +114,24 @@ void vocabulary::readfile() //opens the txt and stores the words in lines
 
 void vocabulary::scorehandler()
 {
-   //restructures the window
+   //----------------------------------restructures the window------------------------------------------
     ui->inputbar->hide();
     ui->okbutton->hide();
     ui->scorelabel->hide();
     ui->questionlabel->hide();
     ui->retrybutton->show();
 
-   //Outputs a message based on the score
-    if ((score>=17) && (score<20)) ui->mainmessage->setText("Perfect round! Your score is " + QString::number(score));
-    if ((score>=11) && (score<17)) ui->mainmessage->setText("Nice one! Your score is " + QString::number(score));
-    if ((score>=7) && (score<11)) ui->mainmessage->setText("Do better! Your score is " + QString::number(score));
+   //--------------------------------Outputs a message based on the score-------------------------------
+    if (score==20) ui->mainmessage->setText("Wow! Perfect round.");
+    if ((score>=17) && (score<20))  ui->mainmessage->setText("Amazing! Your score is " + QString::number(score));
+    if ((score>=11) && (score<17))  ui->mainmessage->setText("Not bad! Your score is " + QString::number(score));
+    if ((score>=7) && (score<11))  ui->mainmessage->setText("Do better! Your score is " + QString::number(score));
     if (score<7) ui->mainmessage->setText("Ouch! Your score is " + QString::number(score) + "...");
 }
 
 void vocabulary::on_retrybutton_clicked()
 {
+    //--------------------------------resets the ui and the variables used------------------------------
     score=0;
     questnum=0;
     ui->inputbar->show();
@@ -127,7 +139,8 @@ void vocabulary::on_retrybutton_clicked()
     ui->scorelabel->show();
     ui->questionlabel->show();
     ui->retrybutton->hide();
+    kiirtszo="def";
+    beirtszo="def";
     vocabulary::on_okbutton_clicked();
 
 }
-

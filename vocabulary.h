@@ -21,7 +21,6 @@ private slots:
     void on_inputbar_returnPressed();
     void readfile();
     void scorehandler();
-
     void on_retrybutton_clicked();
 
 private:
